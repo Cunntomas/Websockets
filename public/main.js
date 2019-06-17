@@ -9,7 +9,7 @@ socket.on('messages', function(data){
 function render(data) {
   let html = data.map((elem)=>{
     return(`<div>
-             <strong>${elem.author}</strong>:
+             <strong>${elem.username}</strong>:
                <em>${elem.text}</em>
           </div>`)
   }).join(" ");
@@ -23,11 +23,9 @@ socket.on('messages', (data)=>{
 
 function addMessage(e) {
 	mensaje = {
-    author: document.getElementById('username').value,
+    username: document.getElementById('username').value,
     text: document.getElementById('text').value
   };
-
-  console.log(mensaje)
 
   socket.emit('new-message', mensaje);
   return false;

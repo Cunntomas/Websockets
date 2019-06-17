@@ -1,37 +1,47 @@
-const express = require('express');
-const app = express();
-const server = require('http').Server(app);
-const io = require('socket.io')(server);
+require('dotenv').config()
 
+const express = require('express')
+const app = express()
+const server = require('http').Server(app)
+const io = require('socket.io')(server)
+const mongoose = require('mongoose')
+const Message = require('../models/messages')
+
+let messages;
 
 server.listen(8080, function(){
-  console.log('Servidor corriendo en localhost:8080');
+  console.log('Servidor corriendo en localhost:8080')
 })
+
+function connectMongoose () {
+  const mongoose = require('mongoose')
+  mongoose.Promise = Promise
+  console.log('mongodb://' + process.env.MONGODB_HOST + ':' + process.env.MONGODB_PORT + '/' + process.env.MONGODB_DB)
+  return mongoose.connect('mongodb://' + process.env.MONGODB_HOST + ':' + process.env.MONGODB_PORT + '/' + process.env.MONGODB_DB, { useNewUrlParser: true })
+}
+
+connectMongoose();
+
 
 app.use(express.static('public'));
 
-let messages = [
-  {
-    author: "Carlos",
-      text: "Hola! que tal?"
-  },{
-  	author: "Pepe",
-      text: "Muy bien! y tu??"
-  },{
-  	author: "Paco",
-      text: "Genial!"
-  }
-]
-
 io.on('connection', (socket)=>{
 	console.log('Un usuario se ha conectado');
-    socket.emit('messages', messages);
+  Message.find().then(msgs => {
+        if(msgs){
+          messages = msgs;
+          socket.emit('messages', messages);
+        }
+    });
+
 
     socket.on('new-message', (data)=>{
-      messages.push(data);
-      console.log(messages);
+      // messages.push(data);
 
+      Message.create({username: data.username, text: data.text});
+      messages.push(data);
       io.sockets.emit('messages', messages);
+
     })
 });
 
